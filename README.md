@@ -128,3 +128,34 @@ Each media object includes:
 - a media path, which may refer to:
     - an image sequence (directory or pattern), or
     - a single video file
+
+## Running the Proof of Concept (POC)
+To run the POC application locally:
+
+1. **Clone this repository and enter the project directory**  
+   ```sh
+   git clone <repo-url>
+   cd <your-project-directory>
+   ```
+
+2. **(Optional but recommended) Create a virtual environment**  
+   ```sh
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+3. **Install requirements**  
+   ```sh
+   pip install -r requirements.txt
+   ```
+   Or, if there is no `requirements.txt`, directly install dependencies (example):  
+   ```sh
+   pip install PySide6 requests
+   ```
+
+4. **Run the main application**  
+   ```sh
+   python main.py
+   ```
+
+The UI should launch displaying the available shelves and media items.
