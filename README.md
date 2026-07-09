@@ -386,18 +386,3 @@ Field groups mirror the details panel sections: **Version**, **Status**, **Team*
 
 ShotGrid IDs (`versionShotgridId`, `entityShotgridId`, `playlist.shotgridId`) enable deep links to `/detail/Version/{id}`, `/detail/Shot/{id}`, `/detail/Playlist/{id}`, etc.
 
----
-
-## Suggested screenshots
-
-If you want to complete the documentation, these captures are especially useful:
-
-| File | Content |
-|------|---------|
-| `docs/main-window.png` | Full window — search, grid, no selection |
-| `docs/filter-popup.png` | Filter popup open (Global / Studio / User) |
-| `docs/media-grid.png` | Grid with a few items selected |
-| `docs/details-panel.png` | Single item — full details + notes |
-| `docs/multi-select-summary.png` | Multi-select summary panel |
-
-Drop the files in `docs/` and the images above will render automatically in this README.
