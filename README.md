@@ -292,19 +292,99 @@ type Query {
 
 ### Example media schema (target)
 
+Aligned with the **ShotGrid Version** entity and the POC details panel:
+
 ```graphql
+enum MediaKind {
+  IMAGE
+  VIDEO
+}
+
+enum NoteType {
+  NOTE
+  REVIEW
+}
+
+type PlaylistRef {
+  name: String!
+  shotgridId: Int!
+}
+
+type NoteReview {
+  type: NoteType!
+  author: String!
+  date: String!
+  body: String!
+  subject: String
+  status: String          # ShotGrid status code (e.g. rev, apr, fin)
+}
+
 type Media {
+  # Grid display
   name: String!
   thumbnailPath: String!
-  mediaPath: String!
+  mediaPath: String!        # Image file, sequence path, or video file
+  kind: MediaKind!
+
+  # Version (ShotGrid Version)
+  version: String!
+  versionShotgridId: Int
+  date: String
+  description: String
+  task: String
+
+  # Linked entity (Shot / Asset)
+  entity: String
+  entityType: String        # e.g. Shot, Asset
+  entityShotgridId: Int
+
+  # Status
+  technicalStatus: String # ShotGrid sg_status_list code
+  artisticStatus: String
+
+  # Team
+  department: String
+  artist: String
+
+  # Media technical
+  resolution: String
+  codec: String
+  container: String
+  frameIn: Int
+  frameOut: Int
+  duration: String          # Timecode or duration string
+  frameCount: Int
+  fps: Float
+
+  # Colorimetry
+  lut: String
+
+  # Organization
+  category: String        # e.g. Assets, Shots
+  section: String
+  subsection: String
+  playlists: [PlaylistRef!]
+  tags: [String!]
+
+  # Files
+  filename: String
+  thumbFile: String
+  videoFile: String
+  imageUrl: String
+  pathToFrames: String
+
+  # Notes & reviews
+  notesReviews: [NoteReview!]
 }
 
 type Query {
-  mediaList(shelfId: ID!): [Media!]!
+  mediaList(shelfId: ID!, search: String): [Media!]!
 }
 ```
 
-The details panel is designed to map naturally onto **ShotGrid Version** fields (status, artist, department, resolution, playlists, notes, etc.).
+Field groups mirror the details panel sections: **Version**, **Status**, **Team**, **Media**, **Colorimetry**, **Organization**, **Files**, and **Notes & Reviews**.
+
+ShotGrid IDs (`versionShotgridId`, `entityShotgridId`, `playlist.shotgridId`) enable deep links to `/detail/Version/{id}`, `/detail/Shot/{id}`, `/detail/Playlist/{id}`, etc.
 
 ---
 
