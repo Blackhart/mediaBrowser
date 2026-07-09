@@ -2,8 +2,6 @@
 
 A **PySide6** desktop application for browsing production media (images and videos), inspired by **ShotGrid** workflows. The POC provides a filterable media grid, a ShotGrid-style shelf panel, and a rich details sidebar with Version metadata.
 
-> **Screenshots:** placeholder paths are used below (`docs/`). Add your own captures to illustrate the UI — see [Suggested screenshots](#suggested-screenshots).
-
 ---
 
 ## Overview
@@ -77,9 +75,33 @@ Examples:
 
 The User section supports:
 
-- **+** (top right) — add a new filter via dialog
-- **edit** — rename a filter (hover a row)
+- **+** (top right) — add a filter using **ShotGrid filter codes** (same syntax as the ShotGrid **Filter** button)
+- **edit** — rename a filter or update its filter code (hover a row)
 - **−** — remove a filter from the list (does not delete media)
+
+#### ShotGrid filter codes
+
+User filters are defined with the **same filter codes as ShotGrid's Filter button** — the standard `field / operator / value` expressions used in the ShotGrid web UI and API.
+
+When clicking **+**, the user provides:
+
+| Field | Description |
+|-------|-------------|
+| **Name** | Display label for the shelf |
+| **Filter code** | ShotGrid-compatible criteria (e.g. `["sg_status_list", "is", "rev"]`) |
+
+These criteria are stored in ShotGrid with the user's saved filter and replayed when the shelf is selected.
+
+**Examples (POC):**
+
+```
+["sg_status_list", "is", "rev"]
+["client_review_date", "is", "2026-07-09"]
+["department.Department.name", "is", "Compositing"]
+["task.Task.assignees", "name_is", "Current User"]
+```
+
+Studio filters from the **preset packages** use the same code format; only the **User** section allows creating and editing them from the Media Browser.
 
 User filter actions are painted in the tree (no child widgets) to avoid window glitches on Linux.
 
@@ -260,7 +282,7 @@ type Shelf {
 
 type ShelfFilter {
   label: String!
-  criteria: String!
+  criteria: String!   # ShotGrid filter code (same syntax as the Filter button)
 }
 
 type Query {

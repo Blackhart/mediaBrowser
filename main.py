@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QAbstractItemView,
     QInputDialog,
     QFormLayout,
+    QDialog,
+    QDialogButtonBox,
 )
 from PySide6.QtMultimedia import QAudioOutput, QMediaPlayer, QVideoSink
 from PySide6.QtGui import QPixmap, QPainter, QColor, QImage, QIcon, QPolygonF, QPalette, QPen
@@ -190,7 +192,9 @@ class CollapsibleFilterSection(QWidget):
             self._add_btn.setText("+")
             self._add_btn.setAutoRaise(True)
             self._add_btn.setFixedSize(18, 18)
-            self._add_btn.setToolTip("Add personal filter")
+            self._add_btn.setToolTip(
+                "Add personal filter"
+            )
             self._add_btn.clicked.connect(self.add_requested.emit)
             header_layout.addWidget(self._add_btn)
 
@@ -660,6 +664,52 @@ MEDIA_INFO_SECTIONS = (
         ("path_to_frames", "Frames path"),
     )),
 )
+
+
+class UserFilterDialog(QDialog):
+    """Dialog to create a user filter with ShotGrid-compatible criteria."""
+
+    def __init__(self, parent=None, title="Add filter", name="", criteria=""):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+
+        layout = QVBoxLayout(self)
+        form = QFormLayout()
+        form.setSpacing(10)
+
+        self._name = QLineEdit(name)
+        self._name.setPlaceholderText("My custom filter")
+
+        self._criteria = QLineEdit(criteria)
+        self._criteria.setPlaceholderText(
+            'e.g. ["sg_status_list", "is", "rev"]'
+        )
+
+        hint = QLabel(
+            "Uses the same filter codes as the ShotGrid Filter button "
+            "(field / operator / value)."
+        )
+        hint.setWordWrap(True)
+        hint.setObjectName("filterCriteriaHint")
+
+        form.addRow("Name", self._name)
+        form.addRow("Filter code", self._criteria)
+        layout.addLayout(form)
+        layout.addWidget(hint)
+
+        buttons = QDialogButtonBox(
+            QDialogButtonBox.Ok | QDialogButtonBox.Cancel
+        )
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        layout.addWidget(buttons)
+
+    def values(self):
+        """Return stripped name and criteria, or None if name is empty."""
+        name = self._name.text().strip()
+        if not name:
+            return None
+        return name, self._criteria.text().strip()
 
 
 class UserFilterActionHandler(QObject):
@@ -1481,6 +1531,10 @@ def main():
             padding: 0 4px 2px 26px;
             background: transparent;
         }
+        QLabel#filterCriteriaHint {
+            color: #888888;
+            font-size: 11px;
+        }
         QScrollBar:vertical {
             background: #252525;
             width: 10px;
@@ -1653,11 +1707,20 @@ def main():
             parent.addChild(item)
         return item
 
-    node_client = add_user_node("Client Review", data={"section": "Client Review"})
+    node_client = add_user_node("Client Review", data={
+        "section": "Client Review",
+        "criteria": '["sg_status_list", "in", ["rev", "vwd"]]',
+    })
     add_user_node(today_str, parent=node_client, data={
-             "section": "Client Review", "subsection": today_str})
+        "section": "Client Review",
+        "subsection": today_str,
+        "criteria": f'["client_review_date", "is", "{today_str}"]',
+    })
     add_user_node(last_monday_str, parent=node_client, data={
-             "section": "Client Review", "subsection": last_monday_str})
+        "section": "Client Review",
+        "subsection": last_monday_str,
+        "criteria": f'["client_review_date", "is", "{last_monday_str}"]',
+    })
 
     for tree in filter_trees:
         tree.expandAll()
@@ -1680,7 +1743,9 @@ def main():
     section_user = CollapsibleFilterSection(
         "User",
         add_button=True,
-        description="Personal filters — editable and saved per user in ShotGrid.",
+        description=(
+            "Personal filters — editable, saved per user in ShotGrid. "
+        ),
     )
     section_user.set_body_widget(user_tree)
 
@@ -2520,32 +2585,50 @@ def main():
         refresh_shelf_popup_size()
 
     def edit_user_item(tree_item):
+        data = tree_item.data(0, Qt.UserRole) or {}
         current_name = tree_item.text(0)
-        new_name, ok = QInputDialog.getText(
+        current_criteria = data.get("criteria", "")
+        dialog = UserFilterDialog(
             window,
-            "Edit filter",
-            "Filter name:",
-            text=current_name,
+            title="Edit filter",
+            name=current_name,
+            criteria=current_criteria,
         )
-        if ok and new_name.strip():
-            tree_item.setText(0, new_name.strip())
-            refresh_shelf_popup_size()
+        if dialog.exec() != QDialog.Accepted:
+            return
+        result = dialog.values()
+        if not result:
+            return
+        name, criteria = result
+        tree_item.setText(0, name)
+        updated = dict(data)
+        updated["section"] = "User"
+        updated["subsection"] = name
+        if criteria:
+            updated["criteria"] = criteria
+        else:
+            updated.pop("criteria", None)
+        tree_item.setData(0, Qt.UserRole, updated)
+        refresh_shelf_popup_size()
 
     def add_user_filter():
-        new_name, ok = QInputDialog.getText(
-            window,
-            "Add filter",
-            "Filter name:",
-        )
-        if ok and new_name.strip():
-            name = new_name.strip()
-            item = QTreeWidgetItem([name])
-            item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
-            item.setData(0, Qt.UserRole, {"section": "User", "subsection": name})
-            user_tree.addTopLevelItem(item)
-            user_tree.expandAll()
-            fit_tree_to_contents(user_tree)
-            refresh_shelf_popup_size()
+        dialog = UserFilterDialog(window, title="Add filter")
+        if dialog.exec() != QDialog.Accepted:
+            return
+        result = dialog.values()
+        if not result:
+            return
+        name, criteria = result
+        filter_data = {"section": "User", "subsection": name}
+        if criteria:
+            filter_data["criteria"] = criteria
+        item = QTreeWidgetItem([name])
+        item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
+        item.setData(0, Qt.UserRole, filter_data)
+        user_tree.addTopLevelItem(item)
+        user_tree.expandAll()
+        fit_tree_to_contents(user_tree)
+        refresh_shelf_popup_size()
 
     user_tree._shelf_handler.delete_requested.connect(delete_user_item)
     user_tree._shelf_handler.edit_requested.connect(edit_user_item)
