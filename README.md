@@ -1,7 +1,6 @@
 # Media Browser
 
-A **PySide6** desktop application for browsing production media (images and videos), inspired by **ShotGrid** workflows. The POC provides a filterable media grid, a ShotGrid-style shelf panel, and a rich details sidebar with Version metadata.
-
+A **PySide6** desktop application for browsing production media (images and videos) inside XStudio.
 ---
 
 ## Overview
@@ -15,8 +14,6 @@ The main window is organized around three areas:
 | **Toolbar** | Search field + **filter** button |
 | **Media grid** | Thumbnails for the current filter and search query |
 | **Details panel** | Appears on the right when one or more media are selected |
-
-The old fixed left shelf panel has been replaced by a **floating filter popup** anchored to the filter button (ShotGrid-style).
 
 ---
 
@@ -46,19 +43,13 @@ These filters map to top-level entity types and are not configurable.
 
 **Source:** ShotGrid preset packages (read-only)
 
-Studio-wide filters defined by the pipeline team in the **ShotGrid preset packages**. They are deployed with the studio configuration and shared across all users. Examples in the POC:
+Studio-wide filters defined by the pipeline team in the **ShotGrid package preset**. They are deployed with the studio configuration and shared across all users. Examples in the POC:
 
 | Group | Filters |
 |-------|---------|
 | **Dept** | Compo, Layout, Animation, … |
 | **Roles** | CG Sup, Leads, Artists, … |
 | **Assigned Tasks** | Assigned to me, To review, … |
-
-Typical use cases:
-
-- browse media per **department**
-- filter by **role** (supervisor, artist, lead, …)
-- show **tasks assigned** to the current user or awaiting review
 
 Users cannot add, edit, or delete Studio filters from the Media Browser.
 
@@ -75,9 +66,9 @@ Examples:
 
 The User section supports:
 
-- **+** (top right) — add a filter using **ShotGrid filter codes** (same syntax as the ShotGrid **Filter** button)
+- **+** (top right) — add a filter
 - **edit** — rename a filter or update its filter code (hover a row)
-- **−** — remove a filter from the list (does not delete media)
+- **−** — remove a filter from the list
 
 #### ShotGrid filter codes
 
@@ -101,9 +92,7 @@ These criteria are stored in ShotGrid with the user's saved filter and replayed 
 ["task.Task.assignees", "name_is", "Current User"]
 ```
 
-Studio filters from the **preset packages** use the same code format; only the **User** section allows creating and editing them from the Media Browser.
-
-User filter actions are painted in the tree (no child widgets) to avoid window glitches on Linux.
+Studio filters from the **package preset** use the same code format; only the **User** section allows creating and editing them from the Media Browser.
 
 ### Section summary
 
@@ -113,7 +102,7 @@ User filter actions are painted in the tree (no child widgets) to avoid window g
 | **Studio** | ShotGrid preset packages | No | ShotGrid studio config |
 | **User** | End user | Yes | ShotGrid (per user) |
 
-Each section can be expanded or collapsed independently. Section height adapts to its content.
+Each section can be expanded or collapsed independently.
 
 ### Filter button badge
 
@@ -188,8 +177,6 @@ Configure the site URL with the environment variable:
 export SHOTGRID_URL="https://your-studio.shotgrid.autodesk.com"
 ```
 
-Default: `https://studio.shotgrid.autodesk.com`
-
 #### Status badges
 
 Technical and artistic statuses use colored capsule badges (Final, Revision, In Progress, Approved, etc.).
@@ -203,7 +190,7 @@ Technical and artistic statuses use colored capsule badges (Final, Revision, In 
 Selecting **two or more** media (Ctrl / Shift) shows a **summary** instead of full per-item details:
 
 - **Summary** — item count, types (e.g. `2 videos, 1 image`), entities (shared or `Mixed`)
-- **Technical / Artistic status** — count badges per status (e.g. `Final ×2`, `Revision ×1`), wrapping to multiple lines when needed
+- **Technical / Artistic status** — count badges per status (e.g. `Final ×2`, `Revision ×1`)
 - **Shared** — Department, Resolution, Codec, Container, LUT, Artist (shared value or `Mixed (N values)`)
 - **Items** — scrollable list of `Title — version` with ShotGrid links and status badge per row
 
