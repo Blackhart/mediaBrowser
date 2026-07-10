@@ -1,6 +1,7 @@
 # Media Browser
 
 A **PySide6** desktop application for browsing production media (images and videos) inside XStudio.
+
 ---
 
 ## Overview
